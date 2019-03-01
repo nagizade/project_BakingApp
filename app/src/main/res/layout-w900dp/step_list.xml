@@ -29,18 +29,21 @@
 
         <TextView
             android:id="@+id/tv_ingredients_label"
-            android:layout_width="@dimen/item_width"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
             android:layout_marginTop="16dp"
+            android:paddingStart="15dp"
             android:text="@string/tv_ingredients_label_text"
-            android:textAppearance="?attr/textAppearanceListItem" />
+            android:textAllCaps="true"
+            android:textAppearance="?attr/textAppearanceListItem"
+            android:textStyle="bold" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/step_list"
             android:name="com.nagizade.bakingapp.activity.StepListFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            app:layoutManager="LinearLayoutManager"
             tools:listitem="@layout/step_list_content" />
     </LinearLayout>
 

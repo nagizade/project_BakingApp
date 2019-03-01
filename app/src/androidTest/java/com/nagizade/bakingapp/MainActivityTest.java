@@ -44,24 +44,13 @@ public class MainActivityTest {
         // Waiting until RecyclerView in MainActivity get's loaded with elements.
         IdlingRegistry.getInstance().register(intentsTestRule.getActivity().getIdlingResource());
 
-        if(isOnline()) {
+
             //Performing click on first element of RecyclerView
             onView(withId(R.id.rv_recipes)).perform(
                     RecyclerViewActions.actionOnItemAtPosition(0,click()));
 
             //Checking if StepListActivity is opened
             intended(hasComponent(new ComponentName(getApplicationContext(), StepListActivity.class)));
-        } else {
-            //Checking if NoInternetActivity is opened
-            intended(hasComponent(new ComponentName(getApplicationContext(), NoInternetActivity.class)));
-        }
-    }
 
-    public boolean isOnline() {
-        ConnectivityManager cm =
-                (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        return cm.getActiveNetworkInfo() != null &&
-                cm.getActiveNetworkInfo().isConnectedOrConnecting();
     }
 }
