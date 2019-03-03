@@ -60,18 +60,18 @@ import static android.view.View.GONE;
 
 public class StepDetailFragment extends Fragment {
 
-    public static final String ARG_STEP_OBJ             = "step_object";
-    public static final String ARG_STEP_POS             = "step_position";
-    public static final String ARG_STEP_ARRAY           = "step_array";
+    public  static final String ARG_STEP_OBJ            = "step_object";
+    public  static final String ARG_STEP_POS            = "step_position";
+    public  static final String ARG_STEP_ARRAY          = "step_array";
 
-    private int                     stepPosition;
-    private Toolbar                 detailToolbar;
-    private SimpleExoPlayer         simpleExoPlayer;
-    private PlayerView              playerView;
-    private FrameLayout             mainMediaFrame;
-    private Step                    step;
-    private View                    rootView;
-    private String                  videoURL;
+    private int                 stepPosition;
+    private Step                step;
+    private View                rootView;
+    private String              videoURL;
+    private Toolbar             detailToolbar;
+    private PlayerView          playerView;
+    private FrameLayout         mainMediaFrame;
+    private SimpleExoPlayer     simpleExoPlayer;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -102,21 +102,44 @@ public class StepDetailFragment extends Fragment {
         playerView          = rootView.findViewById(R.id.exoplayer);
         mainMediaFrame      = rootView.findViewById(R.id.main_media_frame);
 
-       if(savedInstanceState != null) stepPosition = savedInstanceState.getInt(ARG_STEP_POS);
+       if(savedInstanceState != null) {
+           stepPosition     = savedInstanceState.getInt(ARG_STEP_POS);
+       }
         setupData(rootView,step);
         return rootView;
     }
 
     @Override
-    public void onStop() {
-        super.onStop();
-        releasePlayer();
+    public void onStart() {
+        super.onStart();
+
+        if (Util.SDK_INT > 23) {
+           initializePlayer();
+        }
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-        releasePlayer();
+    public void onResume() {
+        super.onResume();
+        if ((Util.SDK_INT <= 23 || simpleExoPlayer == null)) {
+            initializePlayer();
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (Util.SDK_INT <= 23) {
+            releasePlayer();
+        }
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (Util.SDK_INT > 23) {
+            releasePlayer();
+        }
     }
 
     @Override
@@ -149,10 +172,6 @@ public class StepDetailFragment extends Fragment {
             } else {
                 mainMediaFrame.setVisibility(View.VISIBLE);
                 playerView.setVisibility(View.VISIBLE);
-                if(getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE){
-                    //Do some stuff
-                }
-                initializePlayer(rootView.getContext(),videoURL);
             }
 
             //Setting step text instruction
@@ -162,26 +181,23 @@ public class StepDetailFragment extends Fragment {
 
     /***
      * Method to initialize ExoPlayer
-     * @param context
-     * @param videoURL
      */
+    private void initializePlayer() {
+        if(simpleExoPlayer == null) {
+            TrackSelector trackSelector = new DefaultTrackSelector();
+            LoadControl loadControl = new DefaultLoadControl();
+            RenderersFactory renderersFactory = new DefaultRenderersFactory(getContext());
+            simpleExoPlayer = ExoPlayerFactory.newSimpleInstance(renderersFactory,trackSelector,loadControl);
+            simpleExoPlayer.setPlayWhenReady(true);
+            playerView.setPlayer(simpleExoPlayer);
+        }
 
-    private void initializePlayer(Context context, String videoURL) {
-        TrackSelector trackSelector = new DefaultTrackSelector();
-        LoadControl loadControl = new DefaultLoadControl();
-        RenderersFactory renderersFactory = new DefaultRenderersFactory(context);
-
-        simpleExoPlayer = ExoPlayerFactory.newSimpleInstance(renderersFactory,trackSelector,loadControl);
-        playerView.setPlayer(simpleExoPlayer);
-
-        String userAgent = Util.getUserAgent(context,context.getString(R.string.app_name));
+        String userAgent = Util.getUserAgent(getContext(),getContext().getString(R.string.app_name));
         MediaSource mediaSource = new ExtractorMediaSource
-                    .Factory(new DefaultDataSourceFactory(context,userAgent))
-                    .setExtractorsFactory(new DefaultExtractorsFactory())
-                    .createMediaSource(Uri.parse(videoURL));
-
+                .Factory(new DefaultDataSourceFactory(getContext(),userAgent))
+                .setExtractorsFactory(new DefaultExtractorsFactory())
+                .createMediaSource(Uri.parse(videoURL));
         simpleExoPlayer.prepare(mediaSource);
-        simpleExoPlayer.setPlayWhenReady(true);
     }
 
     /**
@@ -194,6 +210,5 @@ public class StepDetailFragment extends Fragment {
             simpleExoPlayer.release();
             simpleExoPlayer = null;
         }
-
     }
 }
